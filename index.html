@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <!-- Required meta tags -->
@@ -12,8 +12,9 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
 
     <!-- CSS -->
-    <link href="bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- <link href="bootstrap.min.css" rel="stylesheet"> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet" >
     <link href="style.css" rel="stylesheet">
 
     <!-- JS -->
@@ -27,7 +28,7 @@
 </head>
 
 <body>
-
+   
     <div class="container-sm" id="app">
 
         <!-- Tabs -->
@@ -49,7 +50,7 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="reviewFilter">
                                     <li v-for="order in orders">
-                                        <a class="dropdown-item" href="#" v-on:click="sortGames(order)">{{ order }}</a>
+                                        <a class="dropdown-item" href="#" @click="sortGames(order)">{{ order }}</a>
                                     </li>
                                 </ul>
                             </div>
@@ -58,7 +59,7 @@
                         <li class="nav-item m-1">
                             <a href="#" class="btn btn-secondary"
                                 :class="{ 'btn-secondary': !isFavOnly, 'btn-warning': isFavOnly }"
-                                v-on:click="filterFavorites()" role="button">
+                                @click="filterFavorites()" role="button">
                                 <i class="bi" :class="{ 'bi-star': !isFavOnly, 'bi-star-fill': isFavOnly }"></i>
                                 <span class="d-sm-none">Favorites only</span>
                             </a>
@@ -72,7 +73,7 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="reviewFilter">
                                     <li v-for="rank in RANK_REVIEWS_FILTER">
-                                        <a class="dropdown-item" href="#" v-on:click="filterReviews(rank)">
+                                        <a class="dropdown-item" href="#" @click="filterReviews(rank)">
                                             {{ rank }}
                                         </a>
                                     </li>
@@ -88,8 +89,24 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="genreFilter">
                                     <li v-for="genre in genres">
-                                        <a class="dropdown-item" href="#" v-on:click="filterGenre(genre.name)">
+                                        <a class="dropdown-item" href="#" @click="filterGenre(genre.name)">
                                             {{ genre.name }} <span class="text-muted">({{ genre.total }})</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <li class="nav-item m-1">
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    Tags
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="tagFilter">
+                                    <li v-for="tag in tags">
+                                        <a class="dropdown-item" href="#" @click="filterTag(tag.name)">
+                                            {{ tag.name }} <span class="text-muted">({{ tag.total }})</span>
                                         </a>
                                     </li>
                                 </ul>
@@ -104,8 +121,8 @@
                                 </button>
                                 <ul class="dropdown-menu" aria-labelledby="releaseFilter">
                                     <li v-for="releaseDate in RELEASE_DATES_FILTER">
-                                        <a class="dropdown-item" href="#" v-on:click="filterReleaseDate(releaseDate)">
-                                            {{ releaseDate }}
+                                        <a class="dropdown-item" href="#" @click="filterReleaseDate(releaseDate)">
+                                            &lt; {{ releaseDate }}
                                         </a>
                                     </li>
                                 </ul>
@@ -114,28 +131,35 @@
 
                         <li class="nav-item m-1">
                             <div class="input-group">
-                                <input type="text" class="form-control" :placeholder="'Search among ' + games.length + ' games...'"
-                                    aria-label="Search game" aria-describedby="search-app" v-model="search">
+                                <input type="text" class="form-control"
+                                    :placeholder="'Search among ' + games.length + ' games...'" aria-label="Search game"
+                                    aria-describedby="search-app" v-model="search">
                                 <span class="input-group-text" id="search-app">
                                     <i class="bi bi-search"></i>
                                 </span>
                             </div>
                         </li>
+
+                    </ul>
                 </div>
             </div>
         </nav>
 
         <!-- Selected Filters -->
-        <button class="btn btn-dark btn-sm m-1" v-on:click="clearReviewFilter()" v-if="reviewFilter">
+        <button class="btn btn-secondary btn-sm m-1" @click="clearReviewFilter()" v-if="reviewFilter">
             <i class="bi bi-x"></i>
             {{ reviewFilter }}
         </button>
-        <button class="btn btn-dark btn-sm m-1" v-for="genreFilter in genreFilters"
-            v-on:click="clearGenreFilter(genreFilter)">
+        <button class="btn btn-secondary btn-sm m-1" v-for="genreFilter in genreFilters"
+            @click="clearGenreFilter(genreFilter)">
             <i class="bi bi-x"></i>
             {{ genreFilter }}
         </button>
-        <button class="btn btn-dark btn-sm m-1" v-on:click="clearReleaseDateFilter()" v-if="releaseDateFilter.label">
+        <button class="btn btn-secondary btn-sm m-1" v-for="tagFilter in tagFilters" @click="clearTagFilter(tagFilter)">
+            <i class="bi bi-x"></i>
+            {{ tagFilter }}
+        </button>
+        <button class="btn btn-secondary btn-sm m-1" @click="clearReleaseDateFilter()" v-if="releaseDateFilter.label">
             <i class="bi bi-x"></i>
             {{ releaseDateFilter.label }}
         </button>
@@ -152,18 +176,17 @@
                 <div class="card h-100 rounded-3" v-if="game.isVisible">
 
                     <div class="fav-btn float-end">
-                        <button class="btn btn-secondary" v-on:click="addToFavorites(game.id)" v-if="!game.isFavorite">
+                        <button class="btn btn-secondary" @click="addToFavorites(game.id)" v-if="!game.isFavorite">
                             <i class="bi bi-star" v-if="!game.isFavorite"></i>
 
                         </button>
-                        <button class="btn btn-warning" v-on:click="removeFromFavorites(game.id)"
+                        <button class="btn btn-warning" @click="removeFromFavorites(game.id)"
                             v-if="game.isFavorite">
                             <i class="bi bi-star-fill"></i>
                         </button>
                     </div>
 
                     <img :src="game.backgroundImg" class="card-img-top" alt="Background Image">
-
 
                     <div class="card-body">
                         <h4 class="card-title">{{ game.name }}</h4>
@@ -186,7 +209,7 @@
                                         100)
                                         }}%
                                         -
-                                        <span v-bind:class="{
+                                        <span :class="{
                                                 'text-warning': game.review.score === 5,
                                                 'text-success': game.review.score > 8,
                                                 'text-danger': game.review.score < 5
@@ -210,17 +233,26 @@
                                     <th scope="row">Publisher</th>
                                     <td>{{ game.publishers.join(', ') }}</td>
                                 </tr>
+                                <tr>
+                                    <th scope="row">Genres</th>
+                                    <td>
+                                        <span class="badge bg-secondary m-1 p-1" v-for="genre in game.genres">
+                                            {{ genre }}
+                                        </span>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
+
                         <div>
-                            <span class="badge bg-primary m-1 p-1" v-for="genre in game.genres">
-                                {{ genre }}
-                            </span>
+                            <a href="#" class="badge bg-primary m-1 p-1 custom-pill" v-for="tag in game.tags" @click="filterTag(tag)">
+                                {{ tag }}
+                            </a>
                         </div>
                     </div>
                     <div class="card-footer">
                         <div class="d-grid gap-2 col-8 mx-auto">
-                            <button type="button" class="btn btn-dark m-2" v-on:click="openSteamLink(game.id)" href="#">
+                            <button type="button" class="btn btn-outline-light m-2" @click="openSteamLink(game.id)" href="#">
                                 <i class="bi-steam"></i> Steam
                             </button>
                         </div>
@@ -230,7 +262,7 @@
         </div>
 
         <!-- Scroll To Top -->
-        <button type="button" class="btn btn-dark back-to-top" v-on:click="scrollToTop()"
+        <button type="button" class="btn btn-secondary back-to-top" @click="scrollToTop()"
             v-if="scrollToTopBtnisVisible">
             <i class="bi bi-chevron-up"></i>
         </button>
