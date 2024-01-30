@@ -1,0 +1,11 @@
+.back-to-top {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+}
+
+.fav-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}

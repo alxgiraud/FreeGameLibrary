@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- IE -->
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    <!-- other browsers -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!-- CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link href="style.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="https://unpkg.com/vue@3.2.31/dist/vue.global.prod.js"></script>
+    <!-- <script src="https://unpkg.com/vue@3"></script> -->
+    <script type="application/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js"></script>
+    <script type="application/javascript" src="appdetails.json"></script>
+
+    <title>Free Games Library</title>
+</head>
+
+<body>
+
+    <div class="container-sm" id="app">
+
+        <!-- Tabs -->
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container- ps-0">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav my-2 mb-lg-0">
+
+                        <li class="nav-item m-1">
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-sort-down"></i><span class="d-sm-none">Order by</span>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="reviewFilter">
+                                    <li v-for="order in orders">
+                                        <a class="dropdown-item" href="#" v-on:click="sortGames(order)">{{ order }}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <li class="nav-item m-1">
+                            <a href="#" class="btn btn-secondary"
+                                :class="{ 'btn-secondary': !isFavOnly, 'btn-warning': isFavOnly }"
+                                v-on:click="filterFavorites()" role="button">
+                                <i class="bi" :class="{ 'bi-star': !isFavOnly, 'bi-star-fill': isFavOnly }"></i>
+                                <span class="d-sm-none">Favorites only</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item m-1">
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    Reviews
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="reviewFilter">
+                                    <li v-for="rank in RANK_REVIEWS_FILTER">
+                                        <a class="dropdown-item" href="#" v-on:click="filterReviews(rank)">
+                                            {{ rank }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <li class="nav-item m-1">
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    Genre
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="genreFilter">
+                                    <li v-for="genre in genres">
+                                        <a class="dropdown-item" href="#" v-on:click="filterGenre(genre.name)">
+                                            {{ genre.name }} <span class="text-muted">({{ genre.total }})</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <li class="nav-item m-1">
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    Release date
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="releaseFilter">
+                                    <li v-for="releaseDate in RELEASE_DATES_FILTER">
+                                        <a class="dropdown-item" href="#" v-on:click="filterReleaseDate(releaseDate)">
+                                            {{ releaseDate }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <li class="nav-item m-1">
+                            <div class="input-group">
+                                <input type="text" class="form-control" :placeholder="'Search among ' + games.length + ' games...'"
+                                    aria-label="Search game" aria-describedby="search-app" v-model="search">
+                                <span class="input-group-text" id="search-app">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                            </div>
+                        </li>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Selected Filters -->
+        <button class="btn btn-dark btn-sm m-1" v-on:click="clearReviewFilter()" v-if="reviewFilter">
+            <i class="bi bi-x"></i>
+            {{ reviewFilter }}
+        </button>
+        <button class="btn btn-dark btn-sm m-1" v-for="genreFilter in genreFilters"
+            v-on:click="clearGenreFilter(genreFilter)">
+            <i class="bi bi-x"></i>
+            {{ genreFilter }}
+        </button>
+        <button class="btn btn-dark btn-sm m-1" v-on:click="clearReleaseDateFilter()" v-if="releaseDateFilter.label">
+            <i class="bi bi-x"></i>
+            {{ releaseDateFilter.label }}
+        </button>
+
+        <!-- Games -->
+        <div class="p-4" v-if="this.games.filter(g => g.isVisible === true).length === 0 && isMounted">
+            <p class=" text-center text-muted">
+                No games to display
+            </p>
+        </div>
+
+        <div class="row row-cols-1 row-cols-lg-3" v-cloak>
+            <div class="col g-4" v-for="game in displayedGames">
+                <div class="card h-100 rounded-3" v-if="game.isVisible">
+
+                    <div class="fav-btn float-end">
+                        <button class="btn btn-secondary" v-on:click="addToFavorites(game.id)" v-if="!game.isFavorite">
+                            <i class="bi bi-star" v-if="!game.isFavorite"></i>
+
+                        </button>
+                        <button class="btn btn-warning" v-on:click="removeFromFavorites(game.id)"
+                            v-if="game.isFavorite">
+                            <i class="bi bi-star-fill"></i>
+                        </button>
+                    </div>
+
+                    <img :src="game.backgroundImg" class="card-img-top" alt="Background Image">
+
+
+                    <div class="card-body">
+                        <h4 class="card-title">{{ game.name }}</h4>
+                        <p class="card-text">
+                            {{ game.description }}
+                            <br />
+                            <a :href="game.website" target="_blank" class="text-info" v-if="game.website">
+                                <small>{{ (game.website.length > 45) ? game.website.substr(0, 44) +
+                                    '&hellip;' :
+                                    game.website }}</small>
+                            </a>
+                        </p>
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Reviews</th>
+                                    <td>
+                                        {{
+                                        Math.round((game.review.totalPositive / game.review.totalReviews) *
+                                        100)
+                                        }}%
+                                        -
+                                        <span v-bind:class="{
+                                                'text-warning': game.review.score === 5,
+                                                'text-success': game.review.score > 8,
+                                                'text-danger': game.review.score < 5
+                                            }">
+                                            {{ game.review.description }}
+                                        </span>
+                                        <span class="text-muted">
+                                            ({{ game.review.totalReviews.toLocaleString('en') }})
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th style="min-width: 110px;" scope="row">Release date</th>
+                                    <td>{{ game.release }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Developer</th>
+                                    <td>{{ game.developers.join(', ') }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Publisher</th>
+                                    <td>{{ game.publishers.join(', ') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div>
+                            <span class="badge bg-primary m-1 p-1" v-for="genre in game.genres">
+                                {{ genre }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-grid gap-2 col-8 mx-auto">
+                            <button type="button" class="btn btn-dark m-2" v-on:click="openSteamLink(game.id)" href="#">
+                                <i class="bi-steam"></i> Steam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll To Top -->
+        <button type="button" class="btn btn-dark back-to-top" v-on:click="scrollToTop()"
+            v-if="scrollToTopBtnisVisible">
+            <i class="bi bi-chevron-up"></i>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"
+        type="application/javascript"></script>
+    <script type="application/javascript" src="index.js"></script>
+
+</body>
+
+</html>
